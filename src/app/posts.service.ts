@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { map, catchError } from 'rxjs/operators';
+import { HttpClient, HttpEventType, HttpHeaders, HttpParams } from '@angular/common/http';
+import { map, catchError, tap } from 'rxjs/operators';
 
 import { Post } from './post.model';
 import { Subject, throwError } from 'rxjs';
@@ -19,8 +19,12 @@ export class PostsService {
     // Send Http request are only sent when you subscribe
     this.http
       .post<{ name: string }>(
-        'https://angular-setup-3899e-default-rtdb.firebaseio.com/posts.json',
-        postData
+        'add your own url',
+        postData,
+        {
+          // Return full response, not just body
+          observe: 'response'
+        }
       )
       .subscribe(
         (responseData) => {
@@ -36,9 +40,17 @@ export class PostsService {
   // Example is returning in service and subscribing in component
   // Need to know when subscribe for loading indicator
   fetchPosts() {
+    let searchParams = new HttpParams();
+    searchParams = searchParams.append('print', 'pretty');
+    searchParams = searchParams.append('custom', 'key');
     return this.http
       .get<{ [key: string]: Post }>(
-        'https://angular-setup-3899e-default-rtdb.firebaseio.com/posts.json'
+        'add your own url',
+        {
+          headers: new HttpHeaders({'Custom-Header': 'Hello'}),
+          params: searchParams,
+          responseType: 'json' //defaults to json
+        }
       )
       .pipe(
         map((responseData) => {
@@ -59,7 +71,19 @@ export class PostsService {
 
   deletePosts() {
     return this.http.delete(
-      'https://angular-setup-3899e-default-rtdb.firebaseio.com/posts.json'
-    );
+      'add your own url',
+      {
+        observe: 'events',
+        responseType: 'text' // option json, text or blob
+      }
+    ).pipe(tap(events => {
+      console.log(events);
+      if (events.type === HttpEventType.Sent) {
+        // ..
+      }
+      if (events.type === HttpEventType.Response) {
+        console.log(events.body);
+      }
+    }));
   }
 }
